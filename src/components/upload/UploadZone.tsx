@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface UploadZoneProps {
   onFilesAdded: (files: File[]) => void;
@@ -21,6 +21,20 @@ export function UploadZone({ onFilesAdded }: UploadZoneProps) {
     },
     [onFilesAdded]
   );
+
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const files = Array.from(e.clipboardData?.files || []).filter((f) =>
+        f.type.startsWith("image/")
+      );
+      if (files.length > 0) {
+        e.preventDefault();
+        onFilesAdded(files);
+      }
+    };
+    document.addEventListener("paste", handlePaste);
+    return () => document.removeEventListener("paste", handlePaste);
+  }, [onFilesAdded]);
 
   const handleFileInput = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,7 +87,7 @@ export function UploadZone({ onFilesAdded }: UploadZoneProps) {
             スクリーンショットをドラッグ＆ドロップ
           </p>
           <p className="text-sm text-gray-500 mt-1">
-            またはクリックしてファイルを選択（複数選択可）
+            クリックしてファイルを選択、またはCtrl+Vで貼り付け
           </p>
         </div>
         <p className="text-xs text-gray-400">
