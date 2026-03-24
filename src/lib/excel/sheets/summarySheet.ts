@@ -2,22 +2,20 @@ import type { Worksheet } from "exceljs";
 import type { PropertyItem } from "@/lib/types/property";
 import type { AggregatedSalesRecord } from "@/lib/types/sales";
 
-interface SummaryRow {
-  branchName: string;
-  leaseMonthlyTotal: number;
-  purchaseTotal: number;
-  propertyCount: number;
-  salesTotal: number;
-  contractCount: number;
-}
-
 const COLUMNS = [
-  { header: "拠点", key: "branchName", width: 18 },
-  { header: "リース月額合計", key: "leaseMonthlyTotal", width: 16 },
-  { header: "買取金額合計", key: "purchaseTotal", width: 14 },
-  { header: "物件件数", key: "propertyCount", width: 10 },
-  { header: "売上合計(最新月)", key: "salesTotal", width: 16 },
-  { header: "契約数(受注NO数)", key: "contractCount", width: 16 },
+  { header: "拠点", key: "branchName", width: 22 },
+  { header: "物件区分", key: "propertyCategory", width: 14 },
+  { header: "契約", key: "contractType", width: 10 },
+  { header: "メーカー", key: "maker", width: 14 },
+  { header: "型式", key: "model", width: 18 },
+  { header: "台数", key: "quantity", width: 6 },
+  { header: "設置日", key: "installDate", width: 12 },
+  { header: "リース会社", key: "leaseCompany", width: 14 },
+  { header: "期間(月)", key: "leasePeriodMonths", width: 9 },
+  { header: "月額(円)", key: "monthlyAmount", width: 12 },
+  { header: "残数", key: "remainingMonths", width: 6 },
+  { header: "リース状況", key: "leaseStatus", width: 12 },
+  { header: "備考", key: "note", width: 16 },
 ];
 
 export function buildSummarySheet(
@@ -33,79 +31,63 @@ export function buildSummarySheet(
   headerRow.fill = {
     type: "pattern",
     pattern: "solid",
-    fgColor: { argb: "FFBF8F00" },
+    fgColor: { argb: "FF4472C4" },
   };
   headerRow.alignment = { vertical: "middle", horizontal: "center" };
 
-  // Collect unique branches
-  const branches = new Set<string>();
-  for (const p of properties) branches.add(p.branchName);
-  for (const s of sales) branches.add(s.branchName);
+  // Collect unique branches (preserve order)
+  const branches: string[] = [];
+  for (const p of properties) {
+    if (!branches.includes(p.branchName)) branches.push(p.branchName);
+  }
+  for (const s of sales) {
+    if (!branches.includes(s.branchName)) branches.push(s.branchName);
+  }
 
-  const summaryRows: SummaryRow[] = [];
-  let totalLease = 0;
-  let totalPurchase = 0;
-  let totalPropertyCount = 0;
-  let totalSales = 0;
-  let totalContracts = 0;
-
+  // Output per branch: properties first, then sales
   for (const branch of branches) {
     const branchProps = properties.filter((p) => p.branchName === branch);
     const branchSales = sales.filter((s) => s.branchName === branch);
 
-    const leaseMonthlyTotal = branchProps
-      .filter(
-        (p) =>
-          p.contractType.includes("リース") ||
-          p.contractType.includes("レンタル")
-      )
-      .reduce((sum, p) => sum + p.monthlyAmount, 0);
+    // Property rows
+    for (const item of branchProps) {
+      ws.addRow({
+        branchName: item.branchName,
+        propertyCategory: item.propertyCategory,
+        contractType: item.contractType,
+        maker: item.maker,
+        model: item.model,
+        quantity: item.quantity,
+        installDate: item.installDate,
+        leaseCompany: item.leaseCompany,
+        leasePeriodMonths: item.leasePeriodMonths ?? "",
+        monthlyAmount: item.monthlyAmount,
+        remainingMonths: item.remainingMonths ?? "",
+        leaseStatus: item.leaseStatus,
+        note: item.note,
+      });
+    }
 
-    const purchaseTotal = branchProps
-      .filter((p) => p.contractType.includes("買取"))
-      .reduce((sum, p) => sum + p.monthlyAmount, 0);
-
-    const salesTotal = branchSales.reduce((sum, s) => sum + s.totalAmount, 0);
-
-    const row: SummaryRow = {
-      branchName: branch,
-      leaseMonthlyTotal,
-      purchaseTotal,
-      propertyCount: branchProps.length,
-      salesTotal,
-      contractCount: branchSales.length,
-    };
-
-    summaryRows.push(row);
-    totalLease += leaseMonthlyTotal;
-    totalPurchase += purchaseTotal;
-    totalPropertyCount += branchProps.length;
-    totalSales += salesTotal;
-    totalContracts += branchSales.length;
+    // Sales rows (mapped to unified columns)
+    for (const item of branchSales) {
+      ws.addRow({
+        branchName: item.branchName,
+        propertyCategory: item.salesCategory,
+        contractType: "",
+        maker: "",
+        model: "",
+        quantity: "",
+        installDate: "",
+        leaseCompany: "",
+        leasePeriodMonths: "",
+        monthlyAmount: item.totalAmount,
+        remainingMonths: "",
+        leaseStatus: "",
+        note: item.billingMonth,
+      });
+    }
   }
-
-  for (const row of summaryRows) {
-    ws.addRow(row);
-  }
-
-  // Total row
-  const totalRow = ws.addRow({
-    branchName: "合計",
-    leaseMonthlyTotal: totalLease,
-    purchaseTotal: totalPurchase,
-    propertyCount: totalPropertyCount,
-    salesTotal: totalSales,
-    contractCount: totalContracts,
-  });
-  totalRow.font = { bold: true };
-  totalRow.fill = {
-    type: "pattern",
-    pattern: "solid",
-    fgColor: { argb: "FFFFF2CC" },
-  };
 
   // Number format
-  ws.getColumn("leaseMonthlyTotal").numFmt = "#,##0";
-  ws.getColumn("purchaseTotal").numFmt = "#,##0";
-  ws.getColumn("salesTotal").numFmt = "#,##0";
+  ws.getColumn("monthlyAmount").numFmt = "#,##0";
 }
