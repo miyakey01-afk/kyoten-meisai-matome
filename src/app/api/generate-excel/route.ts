@@ -10,7 +10,7 @@ interface BranchInput {
   branchName: string;
   properties: PropertyItem[];
   sales: SalesRecord[];
-  latestMonth: string;
+  targetMonth: string;
 }
 
 interface GenerateRequest {
@@ -41,8 +41,8 @@ export async function POST(request: NextRequest) {
       allIncludedProperties.push(...propertyResult.included);
       allExclusions.push(...propertyResult.excluded);
 
-      // Apply sales rules
-      const salesResult = applySalesRules(branch.sales, branch.latestMonth);
+      // Apply sales rules (targetMonth = 最新月の1つ前の月)
+      const salesResult = applySalesRules(branch.sales, branch.targetMonth);
       allSalesIncluded.push(...salesResult.included);
       allExclusions.push(...salesResult.excluded);
     }

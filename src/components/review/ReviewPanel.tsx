@@ -12,6 +12,7 @@ interface BranchReviewData {
   properties: PropertyItem[];
   sales: SalesRecord[];
   latestMonth: string;
+  targetMonth: string;
   propertyConfidence: number;
   salesConfidence: number;
   warnings: string[];
@@ -130,6 +131,7 @@ export function ReviewPanel({
               <SalesTable
                 items={branch.sales}
                 latestMonth={branch.latestMonth}
+                targetMonth={branch.targetMonth}
                 onUpdateItem={(id, updates) =>
                   onUpdateSales(branch.branchName, id, updates)
                 }

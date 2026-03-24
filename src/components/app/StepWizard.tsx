@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { UploadedImage } from "@/lib/types/branch";
 import type { PropertyItem } from "@/lib/types/property";
 import type { SalesRecord } from "@/lib/types/sales";
+import { getPreviousMonth } from "@/lib/rules/salesRules";
 
 // State
 interface BranchExtraction {
@@ -20,6 +21,7 @@ interface BranchExtraction {
   properties: PropertyItem[];
   sales: SalesRecord[];
   latestMonth: string;
+  targetMonth: string;
   propertyConfidence: number;
   salesConfidence: number;
   warnings: string[];
@@ -204,6 +206,7 @@ export function StepWizard() {
         properties: [],
         sales: [],
         latestMonth: "",
+        targetMonth: "",
         propertyConfidence: 0,
         salesConfidence: 0,
         warnings: [],
@@ -295,6 +298,9 @@ export function StepWizard() {
             branchExtraction.sales.push(...data.data);
             branchExtraction.latestMonth =
               data.latestMonth || branchExtraction.latestMonth;
+            if (branchExtraction.latestMonth) {
+              branchExtraction.targetMonth = getPreviousMonth(branchExtraction.latestMonth);
+            }
             branchExtraction.salesConfidence = Math.max(
               branchExtraction.salesConfidence,
               data.confidence || 0
@@ -327,7 +333,7 @@ export function StepWizard() {
         branchName: ext.branchName,
         properties: ext.properties,
         sales: ext.sales,
-        latestMonth: ext.latestMonth,
+        targetMonth: ext.targetMonth,
       }));
 
       const res = await fetch("/api/generate-excel", {

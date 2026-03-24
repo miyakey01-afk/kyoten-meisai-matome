@@ -16,12 +16,14 @@ import type { SalesRecord } from "@/lib/types/sales";
 interface SalesTableProps {
   items: SalesRecord[];
   latestMonth: string;
+  targetMonth: string;
   onUpdateItem: (id: string, updates: Partial<SalesRecord>) => void;
 }
 
 export function SalesTable({
   items,
   latestMonth,
+  targetMonth,
   onUpdateItem,
 }: SalesTableProps) {
   const [editingCell, setEditingCell] = useState<{
@@ -37,15 +39,16 @@ export function SalesTable({
     );
   }
 
-  const latestMonthItems = items.filter((i) => i.billingMonth === latestMonth);
-  const otherItems = items.filter((i) => i.billingMonth !== latestMonth);
+  const targetMonthItems = items.filter((i) => i.billingMonth === targetMonth);
+  const otherItems = items.filter((i) => i.billingMonth !== targetMonth);
 
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
-        <Badge variant="secondary">最新月: {latestMonth}</Badge>
+        <Badge variant="default">集計対象月: {targetMonth}</Badge>
+        <Badge variant="outline">最新月: {latestMonth}（未確定）</Badge>
         <span className="text-xs text-gray-500">
-          最新月: {latestMonthItems.length}件 / 全体: {items.length}件
+          対象月: {targetMonthItems.length}件 / 全体: {items.length}件
         </span>
       </div>
 
@@ -62,7 +65,7 @@ export function SalesTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {latestMonthItems.map((item) => {
+            {targetMonthItems.map((item) => {
               const isExcluded =
                 item.salesCategory.includes("障害") || item.amount === 0;
 
@@ -116,7 +119,7 @@ export function SalesTable({
                     colSpan={6}
                     className="text-xs text-gray-400 bg-gray-50 text-center py-1"
                   >
-                    以下は最新月以外（参考表示・Excel出力対象外）
+                    以下は集計対象月以外（参考表示・Excel出力対象外）
                   </TableCell>
                 </TableRow>
                 {otherItems.map((item) => (

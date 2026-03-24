@@ -4,20 +4,35 @@ import type { ExclusionRecord } from "@/lib/types/extraction";
 export interface SalesRuleResult {
   included: AggregatedSalesRecord[];
   excluded: ExclusionRecord[];
-  latestMonth: string;
+  targetMonth: string;
+}
+
+/**
+ * YYYY-MM形式の年月から1つ前の月を算出する
+ * 例: "2025-03" → "2025-02", "2025-01" → "2024-12"
+ */
+export function getPreviousMonth(yearMonth: string): string {
+  const [yearStr, monthStr] = yearMonth.split("-");
+  let year = parseInt(yearStr, 10);
+  let month = parseInt(monthStr, 10) - 1;
+  if (month < 1) {
+    month = 12;
+    year -= 1;
+  }
+  return `${year}-${String(month).padStart(2, "0")}`;
 }
 
 export function applySalesRules(
   items: SalesRecord[],
-  latestMonth: string
+  targetMonth: string
 ): SalesRuleResult {
   const excluded: ExclusionRecord[] = [];
   const forAggregation: SalesRecord[] = [];
 
-  // Step 1: Filter to latest month only
+  // Step 1: Filter to target month only
   for (const item of items) {
-    if (item.billingMonth !== latestMonth) {
-      // Not latest month — just skip (not added to exclusion list since user only asked for latest month)
+    if (item.billingMonth !== targetMonth) {
+      // Not target month — just skip
       continue;
     }
 
@@ -41,7 +56,7 @@ export function applySalesRules(
   return {
     included: aggregated,
     excluded,
-    latestMonth,
+    targetMonth,
   };
 }
 
