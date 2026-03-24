@@ -6,6 +6,7 @@ export interface UploadedImage {
   mediaType: "image/png" | "image/jpeg" | "image/webp";
   type: "property" | "sales" | null;  // A: 物件一覧 / B: 売上履歴
   branchName: string;       // 拠点名
+  isDetecting?: boolean;    // 拠点名・種別を自動検出中
 }
 
 export interface BranchPair {
