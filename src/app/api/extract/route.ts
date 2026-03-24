@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAnthropicClient } from "@/lib/claude/client";
+import { getGeminiClient } from "@/lib/claude/client";
 import { buildPropertyPrompt, buildSalesPrompt } from "@/lib/claude/prompts";
 import { parsePropertyResponse, parseSalesResponse } from "@/lib/claude/parser";
 
@@ -24,63 +24,51 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const client = getAnthropicClient();
+    const genAI = getGeminiClient();
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
     const prompt =
       extractionType === "property"
         ? buildPropertyPrompt(branchName)
         : buildSalesPrompt(branchName);
 
-    const response = await client.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 8192,
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "image",
-              source: {
-                type: "base64",
-                media_type: mediaType,
-                data: imageBase64,
-              },
-            },
-            {
-              type: "text",
-              text: prompt,
-            },
-          ],
+    const result = await model.generateContent([
+      {
+        inlineData: {
+          mimeType: mediaType,
+          data: imageBase64,
         },
-      ],
-    });
+      },
+      { text: prompt },
+    ]);
 
-    const textContent = response.content.find((c) => c.type === "text");
-    if (!textContent || textContent.type !== "text") {
+    const response = result.response;
+    const responseText = response.text();
+
+    if (!responseText) {
       return NextResponse.json(
-        { error: "No text response from Claude" },
+        { error: "No text response from Gemini" },
         { status: 500 }
       );
     }
 
-    const responseText = textContent.text;
-
     if (extractionType === "property") {
-      const result = parsePropertyResponse(responseText, branchName);
+      const parsed = parsePropertyResponse(responseText, branchName);
       return NextResponse.json({
         type: "property",
-        customerInfo: result.customerInfo,
-        data: result.items,
-        confidence: result.confidence,
-        warnings: result.warnings,
+        customerInfo: parsed.customerInfo,
+        data: parsed.items,
+        confidence: parsed.confidence,
+        warnings: parsed.warnings,
       });
     } else {
-      const result = parseSalesResponse(responseText, branchName);
+      const parsed = parseSalesResponse(responseText, branchName);
       return NextResponse.json({
         type: "sales",
-        latestMonth: result.latestMonth,
-        data: result.items,
-        confidence: result.confidence,
-        warnings: result.warnings,
+        latestMonth: parsed.latestMonth,
+        data: parsed.items,
+        confidence: parsed.confidence,
+        warnings: parsed.warnings,
       });
     }
   } catch (error) {
