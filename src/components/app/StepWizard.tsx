@@ -169,9 +169,42 @@ export function StepWizard() {
         mediaType: mediaType || "image/png",
         type: null,
         branchName: "",
+        isDetecting: true,
       });
     }
     dispatch({ type: "ADD_IMAGES", images: newImages });
+
+    // Auto-detect branch name and type for each image (sequential to inherit branch names)
+    let lastDetectedBranch = "";
+    for (const img of newImages) {
+      try {
+        const res = await fetch("/api/detect-info", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            imageBase64: img.base64,
+            mediaType: img.mediaType,
+          }),
+        });
+        const data = await res.json();
+        const updates: Partial<UploadedImage> = { isDetecting: false };
+        if (data.branchName) {
+          updates.branchName = data.branchName;
+          lastDetectedBranch = data.branchName;
+        } else if (lastDetectedBranch) {
+          // Sales images don't have branch name - inherit from previous
+          updates.branchName = lastDetectedBranch;
+        }
+        if (data.type) updates.type = data.type;
+        dispatch({ type: "UPDATE_IMAGE", id: img.id, updates });
+      } catch {
+        dispatch({
+          type: "UPDATE_IMAGE",
+          id: img.id,
+          updates: { isDetecting: false },
+        });
+      }
+    }
   }, []);
 
   // Process images via Claude API

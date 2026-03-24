@@ -47,6 +47,9 @@ export function ImagePreviewCard({
           <div className="flex items-center gap-2">
             <div className="flex-1">
               <Label className="text-xs text-gray-500">種別</Label>
+              {image.isDetecting ? (
+                <div className="h-8 flex items-center text-xs text-gray-400">検出中...</div>
+              ) : (
               <Select
                 value={image.type || ""}
                 onValueChange={(v) =>
@@ -61,6 +64,7 @@ export function ImagePreviewCard({
                   <SelectItem value="sales">B: 売上履歴</SelectItem>
                 </SelectContent>
               </Select>
+              )}
             </div>
             <Button
               variant="ghost"
@@ -76,7 +80,9 @@ export function ImagePreviewCard({
 
           <div>
             <Label className="text-xs text-gray-500">拠点名</Label>
-            {existingBranches.length > 0 ? (
+            {image.isDetecting ? (
+              <div className="h-8 flex items-center text-xs text-gray-400">検出中...</div>
+            ) : existingBranches.length > 0 ? (
               <div className="flex gap-1">
                 <Input
                   value={image.branchName}
