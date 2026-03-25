@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import type { PropertyItem, CustomerInfo } from "@/lib/types/property";
 import type { SalesRecord } from "@/lib/types/sales";
+import { resolveLeaseCompany } from "@/lib/data/leaseCompanyMap";
 
 function extractJson(text: string): string {
   // Remove markdown code fences if present
@@ -50,7 +51,7 @@ export function parsePropertyResponse(
       model: String(item.model || ""),
       quantity: Number(item.quantity) || 1,
       installDate: String(item.installDate || ""),
-      leaseCompany: String(item.leaseCompany || ""),
+      leaseCompany: resolveLeaseCompany(String(item.leaseCompany || "")),
       leasePeriodMonths:
         item.leasePeriodMonths != null ? Number(item.leasePeriodMonths) : null,
       monthlyAmount: Number(item.monthlyAmount) || 0,
