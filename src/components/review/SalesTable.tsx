@@ -58,7 +58,7 @@ export function SalesTable({
             <TableRow className="bg-green-50">
               <TableHead className="text-xs">請求年月</TableHead>
               <TableHead className="text-xs">受注NO</TableHead>
-              <TableHead className="text-xs">売上分類</TableHead>
+              <TableHead className="text-xs whitespace-nowrap">売上分類</TableHead>
               <TableHead className="text-xs">金額</TableHead>
               <TableHead className="text-xs">請求先NO</TableHead>
               <TableHead className="text-xs">備考</TableHead>
@@ -80,7 +80,7 @@ export function SalesTable({
                     </Badge>
                   </TableCell>
                   <TableCell className="p-1 text-xs">{item.orderNo}</TableCell>
-                  <TableCell className="p-1 text-xs">
+                  <TableCell className="p-1 text-xs whitespace-nowrap">
                     {item.salesCategory}
                     {item.salesCategory.includes("障害") && (
                       <Badge variant="destructive" className="text-[10px] ml-1">
@@ -130,7 +130,7 @@ export function SalesTable({
                     <TableCell className="p-1 text-xs">
                       {item.orderNo}
                     </TableCell>
-                    <TableCell className="p-1 text-xs">
+                    <TableCell className="p-1 text-xs whitespace-nowrap">
                       {item.salesCategory}
                     </TableCell>
                     <TableCell className="p-1 text-xs text-right">
