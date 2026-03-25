@@ -54,17 +54,17 @@ export async function POST(request: NextRequest) {
       customerName,
     });
 
-    const today = new Date().toISOString().split("T")[0];
-    const safeName = customerName
-      ? customerName.replace(/[^a-zA-Z0-9_-]/g, "_")
-      : "customer";
-    const filename = `contracts_${safeName}_${today}.xlsx`;
+    const now = new Date();
+    const datetime = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}_${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}`;
+    const safeName = customerName || "顧客";
+    const filename = `${safeName}_拠点明細_${datetime}.xlsx`;
+    const encodedFilename = encodeURIComponent(filename);
 
     return new NextResponse(new Uint8Array(buffer), {
       headers: {
         "Content-Type":
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "Content-Disposition": `attachment; filename="${filename}"`,
+        "Content-Disposition": `attachment; filename*=UTF-8''${encodedFilename}`,
       },
     });
   } catch (error) {

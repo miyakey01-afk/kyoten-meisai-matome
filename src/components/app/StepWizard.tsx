@@ -387,11 +387,11 @@ export function StepWizard() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       const disposition = res.headers.get("content-disposition") || "";
-      const filenameMatch = disposition.match(/filename="(.+)"/);
+      const filenameMatch = disposition.match(/filename\*=UTF-8''(.+)/);
       a.href = url;
       a.download = filenameMatch
-        ? filenameMatch[1]
-        : `contracts_${state.customerName || "customer"}_${new Date().toISOString().split("T")[0]}.xlsx`;
+        ? decodeURIComponent(filenameMatch[1])
+        : `${state.customerName || "顧客"}_拠点明細_${new Date().toISOString().replace(/[-:T]/g, "").slice(0, 13)}.xlsx`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -608,8 +608,7 @@ export function StepWizard() {
                 />
               </div>
               <p className="text-xs text-gray-500">
-                出力ファイル名: contracts_{state.customerName || "customer"}_
-                {new Date().toISOString().split("T")[0]}.xlsx
+                出力ファイル名: {state.customerName || "顧客"}_拠点明細_YYYYMMDD_HHMM.xlsx
               </p>
             </div>
 
