@@ -637,6 +637,10 @@ export function StepWizard() {
                 {state.isGenerating ? "生成中..." : "Excelをダウンロード"}
               </Button>
             </div>
+
+            <p className="text-sm text-red-600 font-medium mt-4">
+              出力されたEXCELファイルは当社の営業機密情報です。顧客以外への情報漏洩は法的処置に問われる場合がありますので、データの取り扱いには十分注意してください
+            </p>
           </CardContent>
         </Card>
       )}
